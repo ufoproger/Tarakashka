@@ -12,12 +12,12 @@ using Poco::Data::into;
 using Poco::Data::use;
 using Poco::Data::now;
 
-class CModelColumnsStudent : public Gtk::TreeModel::ColumnRecord
+class CModelColumnsOnlyID : public Gtk::TreeModel::ColumnRecord
 {
 	public:
 		Gtk::TreeModelColumn < int > id;
 		
-		CModelColumnsStudent ()
+		CModelColumnsOnlyID ()
 		{
 			add(id);
 		}
@@ -38,22 +38,39 @@ class CMainWindow : public Gtk::Window
 		Gtk::VBox				boxStudents;
 		Gtk::HBox				boxSearchStudents;
 		Gtk::Notebook			notebook;
+		Gtk::ScrolledWindow		scrolledWindowSchools;
+		Gtk::VBox				boxSchools;
+		Gtk::HBox				boxSearchSchools;
+		Gtk::Label				labelSearchSchools;
+		Gtk::Entry				entrySearchSchools;
+		Gtk::TreeView			treeViewSchools;
+		Gtk::HButtonBox			buttonBoxSchools;
+		Gtk::Button				buttonDeleteSchool;
+		Gtk::Button				buttonEditSchool;
+		Gtk::Button				buttonNewSchool;
 		
 		Poco::Data::Session* dbSession;
 
 		Glib::RefPtr < Gtk::ListStore > refListStoreStudents;
+		Glib::RefPtr < Gtk::ListStore > refListStoreSchools;
 
-		std::vector < int > studentsID, schoolsID;
+		std::vector < int > studentsID;
+		std::vector < int > schoolsID;
 
-		CModelColumnsStudent studentColumns;
+		CModelColumnsOnlyID tableColumns;
 
 	public:
 		CMainWindow ():
 			buttonNewStudent("Добавить"),
 			buttonEditStudent("Редактировать"),
 			buttonDeleteStudent("Удалить"),
-			labelSearchStudents("Критерии отсеивания: "),
-			buttonBoxStudents(Gtk::BUTTONBOX_END, 10)
+			buttonNewSchool("Добавить"),
+			buttonEditSchool("Редактировать"),
+			buttonDeleteSchool("Удалить"),
+			labelSearchStudents("Критерий отсеивания: "),
+			labelSearchSchools("Критерий отсеивания: "),
+			buttonBoxStudents(Gtk::BUTTONBOX_END, 10),
+			buttonBoxSchools(Gtk::BUTTONBOX_END, 10)
 		{
 			Poco::Data::SQLite::Connector::registerConnector();		
 			dbSession = new Poco::Data::Session("SQLite", "db.sqlite");
@@ -63,7 +80,8 @@ class CMainWindow : public Gtk::Window
 			
 			add(box);
 			box.pack_start(notebook);
-
+		
+			initSchoolsPage();
 			initStudentsPage();
 			show_all_children();
 		}
@@ -76,7 +94,7 @@ class CMainWindow : public Gtk::Window
 	private:
 		void initStudentsPage ()
 		{
-			refListStoreStudents = Gtk::ListStore::create(studentColumns);
+			refListStoreStudents = Gtk::ListStore::create(tableColumns);
 
 			notebook.append_page(boxStudents, "Ученики");
 			boxStudents.pack_start(boxSearchStudents, Gtk::PACK_SHRINK);
@@ -97,7 +115,7 @@ class CMainWindow : public Gtk::Window
 			treeViewStudents.set_model(refListStoreStudents);
 			treeViewStudents.set_events(Gdk::BUTTON_PRESS_MASK);
 
-			treeViewStudents.insert_column("ID", studentColumns.id, 0);
+			treeViewStudents.insert_column("ID", tableColumns.id, 0);
 			treeViewStudents.insert_column_with_data_func(-1, "ФИО", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewStudents_cell_renderer_name));
 			treeViewStudents.insert_column_with_data_func(-1, "Город", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewStudents_cell_renderer_city));
 			treeViewStudents.insert_column_with_data_func(-1, "Класс", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewStudents_cell_renderer_level));
@@ -113,9 +131,52 @@ class CMainWindow : public Gtk::Window
 			update_studentsID();
 		}
 	
+		void initSchoolsPage ()
+		{
+			refListStoreSchools = Gtk::ListStore::create(tableColumns);
+
+			notebook.append_page(boxSchools, "Школы");
+			boxSchools.pack_start(boxSearchSchools, Gtk::PACK_SHRINK);
+			boxSchools.pack_start(scrolledWindowSchools);
+			boxSchools.pack_start(buttonBoxSchools, Gtk::PACK_SHRINK);
+			buttonBoxSchools.pack_start(buttonNewSchool);
+			buttonBoxSchools.pack_start(buttonEditSchool);
+			buttonBoxSchools.pack_start(buttonDeleteSchool);
+			boxSearchSchools.pack_start(labelSearchSchools, Gtk::PACK_SHRINK);
+			boxSearchSchools.pack_start(entrySearchSchools);
+			scrolledWindowSchools.add(treeViewSchools);			
+			
+			buttonBoxSchools.set_border_width(10);
+			boxSearchSchools.set_border_width(5);			
+
+			treeViewSchools.property_enable_grid_lines().set_value(true);
+			
+			treeViewSchools.set_model(refListStoreSchools);
+			treeViewSchools.set_events(Gdk::BUTTON_PRESS_MASK);
+
+			treeViewSchools.insert_column("ID", tableColumns.id, 0);
+			treeViewSchools.insert_column_with_data_func(-1, "Город", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_city));
+			treeViewSchools.insert_column_with_data_func(-1, "Название", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_name));
+			treeViewSchools.insert_column_with_data_func(-1, "Полное название", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_long_name));
+			treeViewSchools.insert_column_with_data_func(-1, "Формат", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_format));
+			
+			entrySearchSchools.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchSchools_changed));
+			treeViewSchools.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewSchools_row_activated));
+			buttonNewSchool.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonNewSchool_clicked));
+			buttonEditSchool.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonEditSchool_clicked));
+			buttonDeleteSchool.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonDeleteSchool_clicked));
+				
+			update_schoolsID();		
+		}
+		
 		void treeViewStudents_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
 		{
 			process_student(studentsID[path[0]]);
+		}
+		
+		void treeViewSchools_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
+		{
+			process_school(schoolsID[path[0]]);
 		}
 		
 		void process_student (int id = -1)
@@ -195,9 +256,18 @@ class CMainWindow : public Gtk::Window
 			}			
 		}
 
+		void process_school (int id = -1)
+		{
+		}
+
 		void entrySearchStudents_changed()
 		{
 			update_studentsID();
+		}
+
+		void entrySearchSchools_changed()
+		{
+			update_schoolsID();
 		}
 	
 		void buttonNewStudent_clicked ()
@@ -211,7 +281,7 @@ class CMainWindow : public Gtk::Window
 
 			if (refSelection)
 				if (Gtk::TreeModel::iterator it = refSelection->get_selected())
-					process_student((*it)[studentColumns.id]);
+					process_student((*it)[tableColumns.id]);
 		}
 		
 		void buttonDeleteStudent_clicked ()
@@ -226,11 +296,24 @@ class CMainWindow : public Gtk::Window
 					
 					if (messageDialog.run() == Gtk::RESPONSE_YES)
 					{
-						*dbSession << "UPDATE students SET deleted = 1 WHERE id = :id", use((*it)[studentColumns.id]), now;
+						*dbSession << "UPDATE students SET deleted = 1 WHERE id = :id", use((*it)[tableColumns.id]), now;
 						update_studentsID();
 					}
 				}
 			}				
+		}
+		
+		void buttonNewSchool_clicked ()
+		{
+		}
+		
+		void buttonEditSchool_clicked ()
+		{
+		}
+		
+		void buttonDeleteSchool_clicked ()
+		{
+		
 		}
 		
 		void update_studentsID ()
@@ -254,13 +337,34 @@ class CMainWindow : public Gtk::Window
 			{
 				Gtk::TreeModel::Row row = *(refListStoreStudents->append());
 
-				row[studentColumns.id] = *it;
+				row[tableColumns.id] = *it;
 			}		
+		}
+		
+		void update_schoolsID ()
+		{
+			refListStoreSchools->clear();
+			schoolsID.clear();
+			
+			std::string searchText = "%" + entrySearchSchools.get_text().raw() + "%";
+			
+			*dbSession << "SELECT id FROM schools WHERE deleted = 0 " \
+				"AND (UPPER(name) LIKE UPPER(:text) " \
+				"OR UPPER(city) LIKE UPPER(:text) " \
+				"OR UPPER(long_name) LIKE UPPER(:text) " \
+				"OR UPPER(format) LIKE UPPER(:text))", use(searchText), into(schoolsID), now;
+			
+			for (std::vector < int >::const_iterator it = schoolsID.begin(); it != schoolsID.end(); ++it)
+			{
+				Gtk::TreeModel::Row row = *(refListStoreSchools->append());
+				
+				row[tableColumns.id] = *it;
+			}
 		}
 	
 		void treeViewStudents_cell_renderer_name (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			int id = (*it)[studentColumns.id];
+			int id = (*it)[tableColumns.id];
 			std::string name, middle, surname;
 		
 			*dbSession << "SELECT name, middle, surname FROM students WHERE id=:id", into(name), into(middle), into(surname), use(id), now;
@@ -270,7 +374,7 @@ class CMainWindow : public Gtk::Window
 
 		void treeViewStudents_cell_renderer_level (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			int id = (*it)[studentColumns.id];
+			int id = (*it)[tableColumns.id];
 			int level;
 		
 			*dbSession << "SELECT level FROM students WHERE id=:id", into(level), use(id), now;
@@ -280,7 +384,7 @@ class CMainWindow : public Gtk::Window
 
 		void treeViewStudents_cell_renderer_school (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			int id = (*it)[studentColumns.id];
+			int id = (*it)[tableColumns.id];
 			std::string school;
 		
 			*dbSession << "SELECT schools.name FROM schools INNER JOIN students ON students.id = :id AND students.school_id = schools.id", into(school), use(id), now;
@@ -290,7 +394,7 @@ class CMainWindow : public Gtk::Window
 
 		void treeViewStudents_cell_renderer_city (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			int id = (*it)[studentColumns.id];
+			int id = (*it)[tableColumns.id];
 			std::string city;
 		
 			*dbSession << "SELECT schools.city FROM schools INNER JOIN students ON students.id = :id AND students.school_id = schools.id", into(city), use(id), now;
@@ -302,11 +406,52 @@ class CMainWindow : public Gtk::Window
 		{
 			Glib::ustring monthName[13] = {"", "января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
 
-			int id = (*it)[studentColumns.id];
+			int id = (*it)[tableColumns.id];
 			int day, month, year;
 		
 			*dbSession << "SELECT birthday, birthmonth, birthyear FROM students WHERE id=:id", into(day), into(month), into(year), use(id), now;
 
 			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 %2 %3", day, monthName[month], year));
 		}
+		
+		void treeViewSchools_cell_renderer_name (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
+		{
+			int id = (*it)[tableColumns.id];
+			std::string name;
+		
+			*dbSession << "SELECT name FROM schools WHERE id=:id", into(name), use(id), now;
+		
+			cr->set_property<Glib::ustring>("text", name);		
+		}
+
+		void treeViewSchools_cell_renderer_city (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
+		{
+			int id = (*it)[tableColumns.id];
+			std::string city;
+		
+			*dbSession << "SELECT city FROM schools WHERE id=:id", into(city), use(id), now;
+		
+			cr->set_property<Glib::ustring>("text", city);		
+		}
+
+		void treeViewSchools_cell_renderer_long_name (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
+		{
+			int id = (*it)[tableColumns.id];
+			std::string longName;
+		
+			*dbSession << "SELECT long_name FROM schools WHERE id=:id", into(longName), use(id), now;
+		
+			cr->set_property<Glib::ustring>("text", longName);		
+		}
+
+		void treeViewSchools_cell_renderer_format (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
+		{
+			int id = (*it)[tableColumns.id];
+			std::string format;
+		
+			*dbSession << "SELECT format FROM schools WHERE id=:id", into(format), use(id), now;
+			
+			cr->set_property<bool>("active", !format.empty());
+		}
+	
 };
