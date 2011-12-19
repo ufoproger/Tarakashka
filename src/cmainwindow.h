@@ -2,11 +2,11 @@
 
 #include <gtkmm.h>
 
-#include "Poco/Data/Common.h"
 #include "Poco/Data/SQLite/Connector.h"
-#include "Poco/Data/SQLite/SQLiteException.h"
+#include "Poco/Data/Common.h"
 
 #include "ceditstudentdialog.h"
+#include "ceditschooldialog.h"
 
 using Poco::Data::into;
 using Poco::Data::use;
@@ -258,6 +258,61 @@ class CMainWindow : public Gtk::Window
 
 		void process_school (int id = -1)
 		{
+			CEditSchoolDialog dialog;
+			CSchoolData data;
+			
+			if (id != -1)
+			{
+				data.id = id;
+			
+				*dbSession << "SELECT name, long_name, city, format FROM schools WHERE id = :id", 
+					into(data.name),
+					into(data.longName),
+					into(data.city),
+					into(data.format),
+					use(data.id),
+					now;
+
+				dialog.set_data(data);
+			}
+
+			if (dialog.run() == Gtk::RESPONSE_OK)
+			{
+				data = dialog.get_data();
+				
+				if (data.is_valid())
+				{
+					if (id == -1)
+					{
+						*dbSession << "INSERT INTO schools (name, long_name, city, format) " \
+							"VALUES (:name, :long, :city, :format)",
+							use(data.name),
+							use(data.longName),
+							use(data.city),
+							use(data.format),
+							now;
+							
+					}
+					else
+					{
+						*dbSession << "UPDATE schools SET name = :name, long_name = :long, city = :city, format = :format WHERE id = :id",
+							use(data.name),
+							use(data.longName),
+							use(data.city),
+							use(data.format),
+							use(id),
+							now;
+					}					
+					
+					update_schoolsID();
+				}
+				else
+				{
+					Gtk::MessageDialog messageDialog("Некоторые поля не были заполнены. Изменения не внесены!", false, Gtk::MESSAGE_ERROR);
+					
+					messageDialog.run();
+				}
+			}			
 		}
 
 		void entrySearchStudents_changed()
@@ -297,6 +352,7 @@ class CMainWindow : public Gtk::Window
 					if (messageDialog.run() == Gtk::RESPONSE_YES)
 					{
 						*dbSession << "UPDATE students SET deleted = 1 WHERE id = :id", use((*it)[tableColumns.id]), now;
+						
 						update_studentsID();
 					}
 				}
@@ -305,15 +361,36 @@ class CMainWindow : public Gtk::Window
 		
 		void buttonNewSchool_clicked ()
 		{
+			process_school();
 		}
 		
 		void buttonEditSchool_clicked ()
 		{
+			Glib::RefPtr < Gtk::TreeView::Selection > refSelection = treeViewSchools.get_selection();
+
+			if (refSelection)
+				if (Gtk::TreeModel::iterator it = refSelection->get_selected())
+					process_school((*it)[tableColumns.id]);
 		}
 		
 		void buttonDeleteSchool_clicked ()
 		{
-		
+			Glib::RefPtr < Gtk::TreeView::Selection > refSelection = treeViewSchools.get_selection();
+
+			if (refSelection)
+			{
+				if (Gtk::TreeModel::iterator it = refSelection->get_selected())
+				{
+					Gtk::MessageDialog messageDialog("Действительно удалить школу из базы?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+					
+					if (messageDialog.run() == Gtk::RESPONSE_YES)
+					{
+						*dbSession << "UPDATE schools SET deleted = 1 WHERE id = :id", use((*it)[tableColumns.id]), now;
+						
+						update_schoolsID();
+					}
+				}
+			}				
 		}
 		
 		void update_studentsID ()
@@ -453,5 +530,4 @@ class CMainWindow : public Gtk::Window
 			
 			cr->set_property<bool>("active", !format.empty());
 		}
-	
 };

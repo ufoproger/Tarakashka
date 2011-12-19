@@ -44,7 +44,7 @@ class CStudentData
 			birthyear = _birthyear;
 		}
 		
-		CStudentData (const CStudentData &copy)
+		CStudentData (const CStudentData& copy)
 		{
 			id = copy.id;
 			name = copy.name;
@@ -109,65 +109,6 @@ class CEditStudentDialog : public Gtk::Dialog
 		CStudentData data;
 
 	public:
-		void on_response (int responseID)
-		{
-			data.name = entryName.get_text();
-			data.middle = entryMiddle.get_text();
-			data.surname = entrySurname.get_text();
-			data.birthday = (*comboDay.get_active())[comboColumns.id];
-			data.birthmonth = (*comboMonth.get_active())[comboColumns.id];
-			data.birthyear = (*comboYear.get_active())[comboColumns.id];
-			data.schoolID = (*comboSchool.get_active())[comboColumns.id];
-			data.level = (*comboLevel.get_active())[comboColumns.id];
-		}
-		
-		void set_schools (std::vector < Poco::Tuple < int , std::string , std::string > > _schools)
-		{
-			schools = _schools;
-			
-			sort(schools.begin(), schools.end(), compare);
-
-			refListStoreSchools->clear();
-
-			for (std::vector < Poco::Tuple < int , std::string , std::string > >::iterator it = schools.begin(); it != schools.end(); ++it)
-			{
-				Gtk::TreeModel::Row row = *(refListStoreSchools->append());
-				
-				row[comboColumns.id] = it->get<0>();
-				row[comboColumns.text] = Glib::ustring::compose("%1, (%2)", it->get<1>(), it->get<2>());
-			}
-		}
-		
-		void set_data (CStudentData _data)
-		{
-			data = _data;
-
-			comboDay.set_active(data.birthday - 1);
-			comboMonth.set_active(data.birthmonth - 1);
-			comboYear.set_active(data.birthyear - MIN_YEAR);
-			comboLevel.set_active(data.level - MIN_LEVEL);
-			entryName.set_text(data.name);
-			entryMiddle.set_text(data.middle);
-			entrySurname.set_text(data.surname);
-			
-			for (int i = 0; i < schools.size(); ++i)
-				if (schools[i].get<0>() == data.schoolID)
-				{
-					comboSchool.set_active(i);
-					break;
-				}
-		}
-		
-		CStudentData get_data ()
-		{
-			return data;
-		}
-		
-		static bool compare (const Poco::Tuple < int , std::string , std::string > &a, const Poco::Tuple < int , std::string , std::string > &b)
-		{
-			return (a.get<2>() == b.get<2>()) ? (a.get<1>() < b.get<1>()) : (a.get<2>() < b.get<2>());
-		}
-		
 		CEditStudentDialog ():
 			labelBirthday("Дата рождения: "),
 			labelSchool("Школа, класс: "),
@@ -259,4 +200,64 @@ class CEditStudentDialog : public Gtk::Dialog
 		~CEditStudentDialog ()
 		{
 		}
+
+		void on_response (int responseID)
+		{
+			data.name = entryName.get_text();
+			data.middle = entryMiddle.get_text();
+			data.surname = entrySurname.get_text();
+			data.birthday = (*comboDay.get_active())[comboColumns.id];
+			data.birthmonth = (*comboMonth.get_active())[comboColumns.id];
+			data.birthyear = (*comboYear.get_active())[comboColumns.id];
+			data.schoolID = (*comboSchool.get_active())[comboColumns.id];
+			data.level = (*comboLevel.get_active())[comboColumns.id];
+		}
+		
+		void set_schools (std::vector < Poco::Tuple < int , std::string , std::string > > _schools)
+		{
+			schools = _schools;
+			
+			sort(schools.begin(), schools.end(), compare);
+
+			refListStoreSchools->clear();
+
+			for (std::vector < Poco::Tuple < int , std::string , std::string > >::iterator it = schools.begin(); it != schools.end(); ++it)
+			{
+				Gtk::TreeModel::Row row = *(refListStoreSchools->append());
+				
+				row[comboColumns.id] = it->get<0>();
+				row[comboColumns.text] = Glib::ustring::compose("%1, (%2)", it->get<1>(), it->get<2>());
+			}
+		}
+		
+		void set_data (CStudentData _data)
+		{
+			data = _data;
+
+			comboDay.set_active(data.birthday - 1);
+			comboMonth.set_active(data.birthmonth - 1);
+			comboYear.set_active(data.birthyear - MIN_YEAR);
+			comboLevel.set_active(data.level - MIN_LEVEL);
+			entryName.set_text(data.name);
+			entryMiddle.set_text(data.middle);
+			entrySurname.set_text(data.surname);
+			
+			for (int i = 0; i < schools.size(); ++i)
+				if (schools[i].get<0>() == data.schoolID)
+				{
+					comboSchool.set_active(i);
+					break;
+				}
+		}
+		
+		CStudentData get_data ()
+		{
+			return data;
+		}
+		
+		static bool compare (const Poco::Tuple < int , std::string , std::string > &a, const Poco::Tuple < int , std::string , std::string > &b)
+		{
+			return (a.get<2>() == b.get<2>()) ? (a.get<1>() < b.get<1>()) : (a.get<2>() < b.get<2>());
+		}
+		
 };
