@@ -1,8 +1,9 @@
 #pragma once
 
-#include <gtkmm.h>
-
-#include "Poco/Data/Common.h"
+#include <gtkmm/dialog.h>
+#include <gtkmm/label.h>
+#include <gtkmm/entry.h>
+#include <gtkmm/box.h>
 
 class CSchoolData
 {

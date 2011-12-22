@@ -1,6 +1,12 @@
 #pragma once
 
-#include <gtkmm.h>
+#include <gtkmm/treemodel.h>
+#include <gtkmm/dialog.h>
+#include <gtkmm/combobox.h>
+#include <gtkmm/entry.h>
+#include <gtkmm/label.h>
+#include <gtkmm/box.h>
+#include <gtkmm/liststore.h>
 
 #include "Poco/Data/Common.h"
 
