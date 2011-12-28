@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <gtkmm/main.h>
+
 #include "cmainwindow.h"
 
 int main (int argc, char* argv[])

@@ -9,69 +9,8 @@
 #include <gtkmm/liststore.h>
 
 #include "Poco/Data/Common.h"
-/*
-class CModelColumnsComboBox : public Gtk::TreeModel::ColumnRecord
-{
-	public:
-		Gtk::TreeModelColumn < int > id;
-		Gtk::TreeModelColumn < Glib::ustring > text;
-		
-		CModelColumnsComboBox ()
-		{
-			add(id);
-			add(text);
-		}
-};
-*/
-class CSubjectData
-{
-	public:
-		std::string name;
-		std::string format;
-		int id;
-		int day;
-		int month;
-		int year;
-		
-	public:
-		CSubjectData (int _id, std::string _name, std::string _format, int _day, int _month, int _year)
-		{
-			id = _id;
-			name = _name;
-			format = _format;
-			day = _day;
-			month = _month;
-			year = _year;
-		}
-		
-		CSubjectData (const CSubjectData& copy)
-		{
-			id = copy.id;
-			name = copy.name;
-			format = copy.format;
-			day = copy.day;
-			month = copy.month;
-			year = copy.year;
-		}
-		
-		CSubjectData ()
-		{
-			id = -1;
-			day = -1;
-			month = -1;
-			year = -1;
-		}
-				
-		bool is_empty ()
-		{
-			return (id == -1);
-		}
-		
-		bool is_valid ()
-		{
-			return !(name.empty() || day == -1 || month == -1 || year == -1);
-		}
-};
+
+#include "mytypes.h"
 
 class CEditSubjectDialog : public Gtk::Dialog
 {
@@ -92,7 +31,9 @@ class CEditSubjectDialog : public Gtk::Dialog
 		Gtk::HBox		boxDate;
 		Gtk::VBox 		box;
 		
-		Glib::RefPtr < Gtk::ListStore > refListStoreDays, refListStoreMonths, refListStoreYears;
+		Glib::RefPtr < Gtk::ListStore > refListStoreMonths;
+		Glib::RefPtr < Gtk::ListStore > refListStoreYears;
+		Glib::RefPtr < Gtk::ListStore > refListStoreDays;
 
 		CModelColumnsComboBox comboColumns;
 		CSubjectData data;

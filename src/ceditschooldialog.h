@@ -5,49 +5,7 @@
 #include <gtkmm/entry.h>
 #include <gtkmm/box.h>
 
-class CSchoolData
-{
-	public:
-		std::string name;
-		std::string longName;
-		std::string format;
-		std::string city;
-		int id;
-		
-	public:
-		CSchoolData (int _id, std::string _name, std::string _longName, std::string _format, std::string _city)
-		{
-			id = _id;
-			name = _name;
-			longName = _longName;
-			format = _format;
-			city = _city;
-		}
-		
-		CSchoolData (const CSchoolData& copy)
-		{
-			id = copy.id;
-			name = copy.name;	
-			longName = copy.longName;
-			format = copy.format;
-			city = copy.city;
-		}
-		
-		CSchoolData ()
-		{
-			id = -1;
-		}
-		
-		bool is_empty ()
-		{
-			return (id == -1);
-		}
-		
-		bool is_valid ()
-		{
-			return !(name.empty() || longName.empty() || format.empty() || city.empty());
-		}
-};
+#include "mytypes.h"
 
 class CEditSchoolDialog : public Gtk::Dialog
 {
