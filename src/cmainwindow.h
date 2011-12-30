@@ -314,9 +314,24 @@ class CMainWindow : public Gtk::Window
 				}
 				
 				update_olympsID();
+				
+				return;
+				
 			}
-			else
-				process_olymp(id);
+			
+			if (column->get_title() == "Здесь")
+			{
+				int here;
+				
+				*dbSession << "SELECT here FROM olymps WHERE id = :id", into(here), use(id), now;
+				*dbSession << "UPDATE olymps SET here = :here WHERE id = :id", use((bool)(here == 0)), use(id), now;
+				
+				update_olympsID();
+				
+				return;
+			}
+			
+			process_olymp(id);
 		}
 		
 		void treeViewSchools_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
@@ -659,8 +674,6 @@ class CMainWindow : public Gtk::Window
 		
 		void buttonDoSelectedOlymps_clicked ()
 		{
-//			selectedOlympsID.clear();
-//			update_olympsID();
 		}
 		
 		void buttonDeleteStudent_clicked ()
@@ -917,14 +930,14 @@ class CMainWindow : public Gtk::Window
 
 		void treeViewStudents_cell_renderer_birthday (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			Glib::ustring monthName[13] = {"", "января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+
 
 			int id = (*it)[tableColumns.id];
 			int day, month, year;
 		
 			*dbSession << "SELECT birthday, birthmonth, birthyear FROM students WHERE id=:id", into(day), into(month), into(year), use(id), now;
 
-			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 %2 %3", day, monthName[month], year));
+			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1", print_date_full(day, month, year)));
 		}
 		
 		void treeViewSchools_cell_renderer_name (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
@@ -1003,14 +1016,12 @@ class CMainWindow : public Gtk::Window
 		
 		void treeViewSubjects_cell_renderer_date (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-			Glib::ustring monthName[13] = {"", "января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
-
 			int id = (*it)[tableColumns.id];
 			int day, month, year;
 		
 			*dbSession << "SELECT day, month, year FROM subjects WHERE id=:id", into(day), into(month), into(year), use(id), now;
 
-			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 %2 %3", day, monthName[month], year));
+			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1", print_date_full(day, month, year)));
 		}		
 
 		void treeViewSubjects_cell_renderer_format (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
@@ -1065,7 +1076,7 @@ class CMainWindow : public Gtk::Window
 				"WHERE olymps.id = :id", 
 				into(name), into(day), into(month), into(year), use(id), now;
 						
-			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 (%2.%3.%4)", name, day, month, year));	
+			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 (%2)", name, print_date_short(day, month, year)));	
 		}
 
 		void treeViewOlymps_cell_renderer_school (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)

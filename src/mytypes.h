@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <iomanip>
+
+#include <glibmm.h>
 
 class CModelColumnsComboBox : public Gtk::TreeModel::ColumnRecord
 {
@@ -233,4 +236,14 @@ std::string get_month (int month)
 		return std::string();
 		
 	return months[month - 1];
+}
+
+std::string print_date_short (int day, int month, int year)
+{
+	return Glib::ustring::compose("%1.%2.%3", Glib::ustring::format(std::setfill(L'0'), std::setw(2), day), Glib::ustring::format(std::setfill(L'0'), std::setw(2), month), year).raw();
+}
+
+std::string print_date_full (int day, int month, int year)
+{
+	return Glib::ustring::compose("%1 %2 %3", day, get_month(month), year);
 }

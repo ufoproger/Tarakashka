@@ -19,18 +19,18 @@
 class CEditOlympDialog : public Gtk::Dialog
 {
 	private:
-		Gtk::ComboBox	comboSubject;
-		Gtk::ComboBox	comboStudent;
-		Gtk::ComboBox	comboSchool;
-		Gtk::Label		labelSubject;
-		Gtk::Label		labelStudent;
-		Gtk::Label		labelSchool;
-		Gtk::HBox		boxSubject;
-		Gtk::HBox		boxStudent;
-		Gtk::HBox		boxSchool;
-		Gtk::VBox 		box;
-		Gtk::HBox		boxHere;
-		Gtk::CheckButton		checkButtonHere;
+		Gtk::ComboBox		comboSubject;
+		Gtk::ComboBox		comboStudent;
+		Gtk::ComboBox		comboSchool;
+		Gtk::Label			labelSubject;
+		Gtk::Label			labelStudent;
+		Gtk::Label			labelSchool;
+		Gtk::HBox			boxSubject;
+		Gtk::HBox			boxStudent;
+		Gtk::HBox			boxSchool;
+		Gtk::VBox 			box;
+		Gtk::HBox			boxHere;
+		Gtk::CheckButton	checkButtonHere;
 		
 		Glib::RefPtr < Gtk::ListStore > refListStoreSubjects;
 		Glib::RefPtr < Gtk::ListStore > refListStoreStudents;
@@ -125,6 +125,24 @@ class CEditOlympDialog : public Gtk::Dialog
 			data = _data;
 			
 			checkButtonHere.set_active((bool)data.here);
+			
+			for (int i = 0; i < students.size(); ++i)
+				if (students[i].id == data.student)
+				{
+					comboStudent.set_active(i);
+					
+					break;
+				}
+				
+			for (int i = 0; i < subjects.size(); ++i)
+				if (subjects[i].id == data.subject)
+				{
+					comboSubject.set_active(i);
+					
+					break;
+				}
+				
+			comboStudent_changed();
 		}
 
 		void set_subjects (std::vector < CSubjectData > _subjects)
