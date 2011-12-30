@@ -69,6 +69,9 @@ class CMainWindow : public Gtk::Window
 		Gtk::Label				labelSearchOlymps;
 		Gtk::Entry				entrySearchOlymps;
 		Gtk::TreeView			treeViewOlymps;
+		Gtk::Label				labelSelectedOlympsCount;
+		Gtk::Button				buttonUnselectOlymps;
+		Gtk::Button				buttonDoSelectedOlymps;
 		
 		Poco::Data::Session* dbSession;
 
@@ -99,6 +102,8 @@ class CMainWindow : public Gtk::Window
 			buttonNewOlymp("Добавить"),
 			buttonEditOlymp("Редактировать"),
 			buttonDeleteOlymp("Удалить"),
+			buttonUnselectOlymps("Снять отметки"),
+			buttonDoSelectedOlymps("Обработать"),
 			labelSearchStudents("Критерий отсеивания: "),
 			labelSearchSchools("Критерий отсеивания: "),
 			labelSearchOlymps("Критерий отсеивания: "),
@@ -137,7 +142,10 @@ class CMainWindow : public Gtk::Window
 			notebook.append_page(boxOlymps, "Олимпиады");
 			boxOlymps.pack_start(boxSearchOlymps, Gtk::PACK_SHRINK);
 			boxOlymps.pack_start(scrolledWindowOlymps);
+//			boxOlymps.pack_start(labelSelectedOlympsCount, Gtk::PACK_SHRINK);
 			boxOlymps.pack_start(buttonBoxOlymps, Gtk::PACK_SHRINK);
+			buttonBoxOlymps.pack_start(buttonUnselectOlymps);
+			buttonBoxOlymps.pack_start(buttonDoSelectedOlymps);
 			buttonBoxOlymps.pack_start(buttonNewOlymp);
 			buttonBoxOlymps.pack_start(buttonEditOlymp);
 			buttonBoxOlymps.pack_start(buttonDeleteOlymp);
@@ -146,27 +154,29 @@ class CMainWindow : public Gtk::Window
 			scrolledWindowOlymps.add(treeViewOlymps);			
 			
 			buttonBoxOlymps.set_border_width(10);
-			boxSearchOlymps.set_border_width(5);			
+			boxSearchOlymps.set_border_width(5);		
 
 			treeViewOlymps.property_enable_grid_lines().set_value(true);
 			
 			treeViewOlymps.set_model(refListStoreOlymps);
 			treeViewOlymps.set_events(Gdk::BUTTON_PRESS_MASK);
 
-			treeViewOlymps.insert_column_with_data_func(-1, "", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_use));						
 			treeViewOlymps.insert_column("ID", tableColumns.id, 0);
+			treeViewOlymps.insert_column_with_data_func(-1, "", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_use));						
 			treeViewOlymps.insert_column_with_data_func(-1, "Предмет", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_subject));
 			treeViewOlymps.insert_column_with_data_func(-1, "Ученик", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_student));
 			treeViewOlymps.insert_column_with_data_func(-1, "Школа", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_school));
 			treeViewOlymps.insert_column_with_data_func(-1, "Здесь", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_here));
 		
-/*			treeViewStudents.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewStudents_row_activated));
+/*		
 			entrySearchStudents.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchStudents_changed));
 */
+			treeViewOlymps.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_row_activated));
 			buttonEditOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonEditOlymp_clicked));
 			buttonDeleteOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonDeleteOlymp_clicked));
 			buttonNewOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonNewOlymp_clicked));
-
+			buttonDoSelectedOlymps.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonDoSelectedOlymps_clicked));
+			
 			update_olympsID();			
 		}
 		
@@ -277,13 +287,36 @@ class CMainWindow : public Gtk::Window
 			buttonNewSubject.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonNewSubject_clicked));
 			buttonEditSubject.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonEditSubject_clicked));
 			buttonDeleteSubject.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonDeleteSubject_clicked));
-				
+			buttonUnselectOlymps.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonUnselectOlymps_clicked));
 			update_subjectsID();		
 		}
 		
 		void treeViewStudents_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
 		{
 			process_student(studentsID[path[0]]);
+		}
+
+		void treeViewOlymps_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
+		{
+			int id = olympsID[path[0]];
+
+			if (column->get_title().empty())
+			{
+				std::vector < int >::iterator it = find(selectedOlympsID.begin(), selectedOlympsID.end(), id);
+				
+				if (it == selectedOlympsID.end())
+				{
+					selectedOlympsID.push_back(id);
+				}
+				else
+				{
+					selectedOlympsID.erase(it);
+				}
+				
+				update_olympsID();
+			}
+			else
+				process_olymp(id);
 		}
 		
 		void treeViewSchools_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
@@ -296,18 +329,63 @@ class CMainWindow : public Gtk::Window
 			process_subject(subjectsID[path[0]]);
 		}
 		
-		void treeViewOlymps_row_activated (const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column)
-		{
-		}
-
 		void process_olymp (int id = -1)
 		{
 			CEditOlympDialog dialog;
+			COlympData data;
 			
 			dialog.set_subjects(get_subjects_array());
 			dialog.set_students(get_students_array());
 			dialog.set_schools(get_schools_array());
-			dialog.run();
+			
+			if (id != -1)
+			{
+				data.id = id;
+			
+				*dbSession << "SELECT subject_id, student_id, here FROM olymps WHERE id = :id", 
+					into(data.subject),
+					into(data.student),
+					into(data.here),
+					use(data.id),
+					now;
+
+				dialog.set_data(data);
+			}
+
+			if (dialog.run() == Gtk::RESPONSE_OK)
+			{
+				data = dialog.get_data();
+				
+				if (data.is_valid())
+				{
+					if (id == -1)
+					{
+						*dbSession << "INSERT INTO olymps (subject_id, student_id, here) " \
+							"VALUES (:subject, :student, :here)",
+							use(data.subject),
+							use(data.student),
+							use(data.here),
+							now;
+					}
+					else
+					{
+						*dbSession << "UPDATE olymps SET subject_id = :subject, student_id = :student, here = :here WHERE id = :id",
+							use(data.subject),
+							use(data.student),
+							use(data.here),
+							use(id),
+							now;
+					}					
+					
+					update_olympsID();
+				}
+				else
+				{
+					Gtk::MessageDialog messageDialog("Некоторые поля не были заполнены. Изменения не внесены!", false, Gtk::MESSAGE_ERROR);
+					
+					messageDialog.run();
+				}
+			}		
 		}
 		
 		std::vector < CSubjectData > get_subjects_array ()
@@ -572,6 +650,18 @@ class CMainWindow : public Gtk::Window
 				if (Gtk::TreeModel::iterator it = refSelection->get_selected())
 					process_student((*it)[tableColumns.id]);
 		}
+
+		void buttonUnselectOlymps_clicked ()
+		{
+			selectedOlympsID.clear();
+			update_olympsID();
+		}
+		
+		void buttonDoSelectedOlymps_clicked ()
+		{
+//			selectedOlympsID.clear();
+//			update_olympsID();
+		}
 		
 		void buttonDeleteStudent_clicked ()
 		{
@@ -719,7 +809,9 @@ class CMainWindow : public Gtk::Window
 				Gtk::TreeModel::Row row = *(refListStoreOlymps->append());
 
 				row[tableColumns.id] = *it;
-			}		
+			}
+			
+			buttonUnselectOlymps.set_label(Glib::ustring::compose("Снять отметки (%1)", selectedOlympsID.size()));	
 		}
 		
 		void update_studentsID ()
@@ -940,6 +1032,13 @@ class CMainWindow : public Gtk::Window
 			
 			cr->set_property<bool>("active", (bool)here);
 		}
+		
+		void treeViewOlymps_cell_renderer_use (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
+		{
+			int id = (*it)[tableColumns.id];
+
+			cr->set_property<bool>("active", (bool)(std::find(selectedOlympsID.begin(), selectedOlympsID.end(), id) != selectedOlympsID.end()));
+		}		
 
 		void treeViewOlymps_cell_renderer_student (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
@@ -980,11 +1079,6 @@ class CMainWindow : public Gtk::Window
 				into(name), into(city), use(id), now;
 						
 			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 (%2)", name, city));	
-		}
-		
-		void treeViewOlymps_cell_renderer_use (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
-		{
-			int id = (*it)[tableColumns.id];
 		}
 };
 

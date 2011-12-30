@@ -92,16 +92,16 @@ class COlympData
 	public:
 		int id;
 		int subject;
-		int school;
 		int student;
+		int here;
 		
 	public:
-		COlympData (int _id, int _subject, int _student, int _school)
+		COlympData (int _id, int _subject, int _student, int _here)
 		{
 			id = _id;
 			subject = _subject;
 			student = _student;
-			school = _school;
+			here = _here;
 		}
 		
 		COlympData (const COlympData& copy)
@@ -109,15 +109,15 @@ class COlympData
 			id = copy.id;
 			subject = copy.subject;
 			student = copy.student;
-			school = copy.school;
+			here = copy.here;
 		}
 		
 		COlympData ()
 		{
 			id = -1;
 			subject = -1;
-			school = -1;
-			student = -1;		
+			student = -1;
+			here = 0;
 		}
 				
 		bool is_empty ()
@@ -127,7 +127,7 @@ class COlympData
 		
 		bool is_valid ()
 		{
-			return !(subject == -1 || school == -1 || student == -1);
+			return !(subject == -1 || student == -1);
 		}
 };
 
@@ -225,4 +225,12 @@ class CSchoolData
 		}
 };
 
-
+std::string get_month (int month)
+{
+	std::string months[12] = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+	
+	if (month < 1 || month > 12)
+		return std::string();
+		
+	return months[month - 1];
+}

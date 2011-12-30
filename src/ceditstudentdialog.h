@@ -107,14 +107,12 @@ class CEditStudentDialog : public Gtk::Dialog
 				row[comboColumns.text] = Glib::ustring::compose("%1 класс", i);
 			}
 			
-			Glib::ustring monthName[12] = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
-			
 			for (int i = 0; i < 12; ++i)
 			{
 				Gtk::TreeModel::Row row = *(refListStoreMonths->append());
 				
 				row[comboColumns.id] = i + 1;
-				row[comboColumns.text] = monthName[i];
+				row[comboColumns.text] = get_month(i + 1);
 			}
 
 			for (int i = MIN_YEAR; i <= MAX_YEAR; ++i)
