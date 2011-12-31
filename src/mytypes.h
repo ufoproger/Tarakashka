@@ -224,7 +224,7 @@ class CSchoolData
 		
 		bool is_valid ()
 		{
-			return !(name.empty() || longName.empty() || format.empty() || city.empty());
+			return !(name.empty() || longName.empty() || city.empty());
 		}
 };
 
@@ -250,10 +250,13 @@ std::string print_date_full (int day, int month, int year)
 
 void my_replace (std::string& source, std::string from, std::string to)
 {
-	size_t pos = source.find(from);
+	while (true)
+	{
+		size_t pos = source.find(from);
 	
-	if (pos == std::string::npos)
-		return;
+		if (pos == std::string::npos)
+			break;
 		
-	source.replace(pos, from.length(), to);
+		source.replace(pos, from.length(), to);
+	}
 }

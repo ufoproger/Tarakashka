@@ -61,7 +61,8 @@ class CModulePrint : public CModuleBase
 			for (std::vector < int >::const_iterator it = selectedOlympsID.begin(); it != selectedOlympsID.end(); ++it)
 			{
 				std::ifstream fileIn(filename.c_str());
-				
+				Poco::TemporaryFile temp;
+					
 				if (!fileIn.is_open())
 				{
 					std::cout << "Файл \"" << filename << "\" не открыт!" << std::endl;
@@ -77,8 +78,7 @@ class CModulePrint : public CModuleBase
 				std::string filenameOut = Glib::ustring::compose("process/Диплом %1 %2 %3 (%4, %5) [%6].ods", student.name, student.middle, student.surname, school.name, school.city, subject.name).raw();
 				
 				std::ofstream fileOut(filenameOut.c_str());
-				Poco::Path temp(Poco::TemporaryFile().path());
-				Poco::Zip::Decompress archiveOut(fileIn, temp);
+				Poco::Zip::Decompress archiveOut(fileIn, temp.path());
 				
 				archiveOut.decompressAllFiles();				
 
@@ -92,17 +92,26 @@ class CModulePrint : public CModuleBase
 				replaces["##SUBJECT_DAY##"] = Glib::ustring::compose("%1", subject.day).raw();
 				replaces["##SUBJECT_MONTH##"] = get_month(subject.month);
 				replaces["##SUBJECT_YEAR##"] = Glib::ustring::compose("%1", subject.year % 100).raw();
-				replaces["##SCHOOL_NAME_1##"] = "";
-				replaces["##SCHOOL_NAME_2##"] = "";
-				replaces["##SCHOOL_NAME_3##"] = "";
-				replaces["##SCHOOL_NAME_4##"] = "";
-				replaces["##SCHOOL_NAME_5##"] = "";
 				
-				process_file(temp.toString() + "/content.xml", replaces);
+				for (int i = 1; i <= 5; ++i)
+					replaces[Glib::ustring::compose("##SCHOOL_NAME_%1##", i).raw()] = "";
+				
+				std::string s, format = school.format + "$";
+				
+				for (int i = 0, count = 0; i < format.length(); ++i)
+					if (format[i] == '$')
+					{
+						replaces[Glib::ustring::compose("##SCHOOL_NAME_%1##", ++count).raw()] = s;
+						s.clear();
+					}
+					else
+						s.push_back(format[i]);
+				
+				process_file(temp.path() + "/content.xml", replaces);
 				
 				Poco::Zip::Compress archiveIn(fileOut, true);
 
-				archiveIn.addRecursive(temp);
+				archiveIn.addRecursive(temp.path());
 				archiveIn.close();
 			}		
 		}

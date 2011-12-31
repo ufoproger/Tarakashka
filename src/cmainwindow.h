@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "cselectmoduledialog.h"
 #include "ceditstudentdialog.h"
 #include "ceditschooldialog.h"
 #include "ceditsubjectdialog.h"
@@ -129,6 +130,7 @@ class CMainWindow : public Gtk::Window
 			initStudentsPage();
 			initSchoolsPage();
 
+			modules.push_back(new CModulePrint());
 			modules.push_back(new CModulePrint());
 			
 			show_all_children();
@@ -693,12 +695,21 @@ class CMainWindow : public Gtk::Window
 		
 		void buttonDoSelectedOlymps_clicked ()
 		{
-			modules.front()->set_students(get_students_array());
-			modules.front()->set_subjects(get_subjects_array());
-			modules.front()->set_schools(get_schools_array());
-			modules.front()->set_olymps(get_olymps_array());
-			modules.front()->run(selectedOlympsID);
-			modules.front()->clear();
+			CSelectModuleDialog dialog;
+			
+			dialog.set_data(modules);
+			
+			if (dialog.run() == Gtk::RESPONSE_OK)
+			{
+				int index = dialog.get_data();
+				
+				modules[index]->set_students(get_students_array());
+				modules[index]->set_subjects(get_subjects_array());
+				modules[index]->set_schools(get_schools_array());
+				modules[index]->set_olymps(get_olymps_array());
+				modules[index]->run(selectedOlympsID);
+				modules[index]->clear();
+			}
 		}
 		
 		void buttonDeleteStudent_clicked ()

@@ -19,23 +19,38 @@ class CEditSchoolDialog : public Gtk::Dialog
 		Gtk::HBox		boxLongName;
 		Gtk::HBox		boxFormat;
 		Gtk::Label		labelLongName;
+		Gtk::Label		labelShowFormat;
 		Gtk::Entry		entryLongName;
 		Gtk::Label		labelFormat;
 		Gtk::Entry		entryFormat;
 		Gtk::Label		labelFormatHelp;
-		
+				
 		CSchoolData data;
 
+	private:
+		void entryFormat_changed ()
+		{
+			std::string s = entryFormat.get_text();
+			
+			my_replace(s, "$", "\n");
+			
+			if (s.empty())
+				labelShowFormat.set_text("Пока формат отображения не задан!");
+			else
+				labelShowFormat.set_text(s);		
+		}
+		
 	public:
 		CEditSchoolDialog ():
 			labelName("Школа: "),
 			labelCity("Район: "),
 			labelLongName("Расшифровка: "),
-			labelFormat("Формат: "),
-			labelFormatHelp("Символ \"$\" при печати означает перенос строки")
+			labelFormatHelp("Символ \"$\" при печати означает перенос строки"),
+			labelShowFormat("Тест")
 		{
 			set_title("Редактирование данных ученика");
-
+			resize(700, get_height());
+			
 			get_vbox()->pack_start(box);
 			box.pack_start(boxName, Gtk::PACK_SHRINK);
 			box.pack_start(boxLongName, Gtk::PACK_SHRINK);
@@ -49,7 +64,10 @@ class CEditSchoolDialog : public Gtk::Dialog
 			boxLongName.pack_start(entryLongName);
 			boxFormat.pack_start(labelFormat, Gtk::PACK_SHRINK);
 			boxFormat.pack_start(entryFormat);
+			box.pack_start(labelShowFormat);
 			
+			entryFormat.signal_changed().connect(sigc::mem_fun(*this, &CEditSchoolDialog::entryFormat_changed));
+					
 			box.set_border_width(10);
 			box.set_spacing(5);
 			boxName.set_spacing(5);
@@ -82,6 +100,8 @@ class CEditSchoolDialog : public Gtk::Dialog
 			entryLongName.set_text(data.longName);
 			entryCity.set_text(data.city);
 			entryFormat.set_text(data.format);
+			
+			entryFormat_changed();
 		}
 		
 		CSchoolData get_data ()
