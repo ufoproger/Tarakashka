@@ -247,3 +247,13 @@ std::string print_date_full (int day, int month, int year)
 {
 	return Glib::ustring::compose("%1 %2 %3", day, get_month(month), year);
 }
+
+void my_replace (std::string& source, std::string from, std::string to)
+{
+	size_t pos = source.find(from);
+	
+	if (pos == std::string::npos)
+		return;
+		
+	source.replace(pos, from.length(), to);
+}

@@ -21,6 +21,8 @@
 #include "ceditschooldialog.h"
 #include "ceditsubjectdialog.h"
 #include "ceditolympdialog.h"
+#include "cmoduleprint.h"
+#include "cmodulebase.h"
 #include "mytypes.h"
 
 using Poco::Data::into;
@@ -80,12 +82,13 @@ class CMainWindow : public Gtk::Window
 		Glib::RefPtr < Gtk::ListStore > refListStoreSubjects;
 		Glib::RefPtr < Gtk::ListStore > refListStoreOlymps;
 		
+		std::vector < CModuleBase* > modules;
 		std::vector < int > selectedOlympsID;
 		std::vector < int > studentsID;
 		std::vector < int > subjectsID;
 		std::vector < int > schoolsID;
 		std::vector < int > olympsID;
-
+		
 		CModelColumnsOnlyID tableColumns;
 
 	public:
@@ -126,6 +129,8 @@ class CMainWindow : public Gtk::Window
 			initStudentsPage();
 			initSchoolsPage();
 
+			modules.push_back(new CModulePrint());
+			
 			show_all_children();
 		}
 		
@@ -431,6 +436,20 @@ class CMainWindow : public Gtk::Window
 			return result;
 		}
 
+		std::vector < COlympData > get_olymps_array ()
+		{
+			std::vector < Poco::Tuple < int , int , int , int > > olymps;
+			
+			*dbSession << "SELECT id, subject_id, student_id, here FROM olymps WHERE deleted = 0", into(olymps), now;
+			
+			std::vector < COlympData > result;
+			
+			for (std::vector < Poco::Tuple < int , int , int , int > >::const_iterator it = olymps.begin(); it != olymps.end(); ++it)
+				result.push_back(COlympData(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>()));
+
+			return result;
+		}
+
 		std::vector < CStudentData > get_students_array ()
 		{
 			std::vector < Poco::Tuple < int , std::string , std::string , std::string , int , int , int , int , int > > students;
@@ -674,6 +693,12 @@ class CMainWindow : public Gtk::Window
 		
 		void buttonDoSelectedOlymps_clicked ()
 		{
+			modules.front()->set_students(get_students_array());
+			modules.front()->set_subjects(get_subjects_array());
+			modules.front()->set_schools(get_schools_array());
+			modules.front()->set_olymps(get_olymps_array());
+			modules.front()->run(selectedOlympsID);
+			modules.front()->clear();
 		}
 		
 		void buttonDeleteStudent_clicked ()
