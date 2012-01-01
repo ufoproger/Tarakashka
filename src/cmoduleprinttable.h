@@ -9,12 +9,27 @@
 #include <fstream>
 #include <map>
 
+#include "cconfiguremoduleprinttabledialog.h"
 #include "cmodulebase.h"
 #include "mytypes.h"
 
 class CModulePrintTable : public CModuleBase
 {
 	private:
+		std::map < std::string , std::string > extraReplaces;
+		std::string filename;
+		
+		Gtk::Dialog* get_dialog ()
+		{
+			return new CConfigureModulePrintTableDialog();
+		}
+		
+		void get_dialog_data (Gtk::Dialog* dialog)
+		{
+			extraReplaces = *((std::map < std::string , std::string >*)dialog->get_data("extra_replaces"));
+			filename = *(std::string*)(dialog->get_data("filename"));
+		}
+		
 		void process_file (std::string filename)
 		{
 			std::ifstream in(filename.c_str());
@@ -76,13 +91,20 @@ class CModulePrintTable : public CModuleBase
 				s += current_row;
 			}
 			
+			for (std::map < std::string , std::string >::const_iterator it = extraReplaces.begin(); it != extraReplaces.end(); ++it)
+			{
+				my_replace(s, it->first, it->second);
+				my_replace(header, it->first, it->second);
+				my_replace(footer, it->first, it->second);
+			}
+			
 			std::ofstream out(filename.c_str());
 
 			out << header << s << footer;
 			
 			out.close();
 		}
-		
+
 	public:
 		~CModulePrintTable ()
 		{
@@ -100,16 +122,16 @@ class CModulePrintTable : public CModuleBase
 		
 		void process ()
 		{
-			std::string filename("test2.ods");
 			std::ifstream fileIn(filename.c_str());
 			Poco::TemporaryFile temp;
 				
 			if (!fileIn.is_open())
 			{
 				std::cout << "Файл \"" << filename << "\" не открыт!" << std::endl;
+				return;
 			}
 
-			std::string filenameOut = "process/Таблица.ods";
+			std::string filenameOut = resultPath + "Сводная таблица.ods";
 			
 			Poco::Zip::Decompress archiveOut(fileIn, temp.path());
 			
@@ -123,9 +145,4 @@ class CModulePrintTable : public CModuleBase
 			archiveIn.addRecursive(temp.path());
 			archiveIn.close();
 		}
-		
-		void clear ()
-		{
-			CModuleBase::clear();
-		}	
 };

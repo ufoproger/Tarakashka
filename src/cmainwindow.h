@@ -162,10 +162,9 @@ class CMainWindow : public Gtk::Window
 			scrolledWindowOlymps.add(treeViewOlymps);			
 			
 			buttonBoxOlymps.set_border_width(10);
-			boxSearchOlymps.set_border_width(5);		
+			boxSearchOlymps.set_border_width(5);
 
 			treeViewOlymps.property_enable_grid_lines().set_value(true);
-			
 			treeViewOlymps.set_model(refListStoreOlymps);
 			treeViewOlymps.set_events(Gdk::BUTTON_PRESS_MASK);
 
@@ -179,6 +178,7 @@ class CMainWindow : public Gtk::Window
 /*		
 			entrySearchStudents.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchStudents_changed));
 */
+
 			treeViewOlymps.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_row_activated));
 			buttonEditOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonEditOlymp_clicked));
 			buttonDeleteOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonDeleteOlymp_clicked));
@@ -696,6 +696,15 @@ class CMainWindow : public Gtk::Window
 		
 		void buttonDoSelectedOlymps_clicked ()
 		{
+			if (selectedOlympsID.empty())
+			{
+				Gtk::MessageDialog dialogError("Пустой запрос!", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+				
+				dialogError.run();
+				
+				return;
+			}
+
 			CSelectModuleDialog dialog;
 			
 			dialog.set_data(modules);
@@ -709,7 +718,6 @@ class CMainWindow : public Gtk::Window
 				modules[index]->set_schools(get_schools_array());
 				modules[index]->set_olymps(get_olymps_array());
 				modules[index]->run(selectedOlympsID);
-				modules[index]->clear();
 			}
 		}
 		

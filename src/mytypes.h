@@ -29,6 +29,19 @@ class CModelColumnsOnlyID : public Gtk::TreeModel::ColumnRecord
 		}
 };
 
+class CModelColumnsForProperty : public Gtk::TreeModel::ColumnRecord
+{
+	public:
+		Gtk::TreeModelColumn < std::string > label;
+		Gtk::TreeModelColumn < std::string > text;
+		
+		CModelColumnsForProperty ()
+		{
+			add(label);
+			add(text);
+		}
+};
+
 class CStudentData
 {
 	public:

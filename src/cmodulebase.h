@@ -11,15 +11,24 @@
 class CModuleBase
 {
 	protected:
-		Gtk::Dialog *dialog;
 		std::vector < CStudentData > students;
 		std::vector < CSubjectData > subjects;
 		std::vector < CSchoolData > schools;
 		std::vector < COlympData > olymps;
 		std::vector < int > selectedOlympsID;
-
+		std::string resultPath;
+		
 	protected:
 		virtual void process () = 0;
+		
+		virtual void get_dialog_data (Gtk::Dialog* dialog)
+		{
+		}
+		
+		virtual Gtk::Dialog* get_dialog ()
+		{
+			return NULL;
+		}
 		
 		bool get_information (int id, CStudentData &student, CSubjectData &subject, CSchoolData &school)
 		{
@@ -30,15 +39,13 @@ class CModuleBase
 						if (it2->id == it->student)
 						{
 							student = *it2;
-							
 							break;
 						}
 						
 					for (std::vector < CSubjectData >::const_iterator it2 = subjects.begin(); it2 != subjects.end(); ++it2)
 						if (it2->id == it->subject)
 						{
-							subject = *it2;
-							
+							subject = *it2;						
 							break;
 						}
 						
@@ -48,8 +55,7 @@ class CModuleBase
 			for (std::vector < CSchoolData >::const_iterator it = schools.begin(); it != schools.end(); ++it)
 				if (it->id == student.schoolID)
 				{
-					school = *it;
-					
+					school = *it;				
 					break;
 				}
 				
@@ -57,26 +63,16 @@ class CModuleBase
 		}
 		
 	public:
+		virtual std::string get_name () const = 0;
+		virtual std::string get_description () const = 0;
+		
 		CModuleBase ()
 		{
-			clear();
+			resultPath = "processed/";
 		}
 		
 		~CModuleBase ()
 		{
-		}
-		
-		virtual std::string get_name () const = 0;
-		virtual std::string get_description () const = 0;		
-		
-		void clear ()
-		{
-			students.clear();
-			subjects.clear();
-			schools.clear();
-			selectedOlympsID.clear();
-			
-			dialog = NULL;
 		}
 		
 		void set_students (const std::vector < CStudentData > &_students)
@@ -103,26 +99,18 @@ class CModuleBase
 		{
 			selectedOlympsID = _selectedOlympsID;
 		
-			if (selectedOlympsID.empty())
-			{
-				Gtk::MessageDialog dialogError("Пустой запрос!", false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
-				
-				dialogError.run();
-				
-				return false;
-			}
+			int response = Gtk::RESPONSE_OK;
+			Gtk::Dialog* dialog = get_dialog();
 			
-			if (dialog == NULL)
-				dialog = new Gtk::MessageDialog(Glib::ustring::compose("Выполнить модуль \"%1\"?", get_name()), false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
-				
-			int response = dialog->run();
-			
-			delete dialog;
+			if (dialog)
+				response = dialog->run();
 			
 			if (response == Gtk::RESPONSE_YES || response == Gtk::RESPONSE_OK)
 			{
+				get_dialog_data(dialog);
 				process();
 				
+				delete dialog;
 				return true;
 			}
 

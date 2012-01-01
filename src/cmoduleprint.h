@@ -9,12 +9,15 @@
 #include <fstream>
 #include <map>
 
+#include "cconfiguremoduleprintdialog.h"
 #include "cmodulebase.h"
 #include "mytypes.h"
 
 class CModulePrint : public CModuleBase
 {
 	private:
+		std::string filename;
+		
 		void process_file (std::string filename, std::map < std::string , std::string > &replaces)
 		{
 			std::ifstream in(filename.c_str());
@@ -26,11 +29,7 @@ class CModulePrint : public CModuleBase
 			in.close();
 			
 			for (std::map < std::string , std::string >::const_iterator it = replaces.begin(); it != replaces.end(); ++it)
-			{
-				std::cout << "replace from '" << it->first << "' to '" << it->second << "'." << std::endl;
-				
 				my_replace(s, it->first, it->second);
-			}
 			
 			std::ofstream out(filename.c_str());
 			
@@ -38,26 +37,19 @@ class CModulePrint : public CModuleBase
 			
 			out.close();
 		}
-		
-	public:
-		~CModulePrint ()
+
+		Gtk::Dialog* get_dialog ()
 		{
+			return new CConfigureModulePrintDialog();
 		}
 		
-		std::string get_name () const
+		void get_dialog_data (Gtk::Dialog* dialog)
 		{
-			return "Тестовый модуль печати дипломов";
-		}
-		
-		std::string get_description () const
-		{
-			return "Пробный модуль";
+			filename = *(std::string*)(dialog->get_data("filename"));
 		}
 		
 		void process ()
 		{
-			std::string filename("test.ods");
-
 			for (std::vector < int >::const_iterator it = selectedOlympsID.begin(); it != selectedOlympsID.end(); ++it)
 			{
 				std::ifstream fileIn(filename.c_str());
@@ -66,7 +58,7 @@ class CModulePrint : public CModuleBase
 				if (!fileIn.is_open())
 				{
 					std::cout << "Файл \"" << filename << "\" не открыт!" << std::endl;
-					continue;
+					return;
 				}
 
 				CStudentData student;
@@ -75,8 +67,7 @@ class CModulePrint : public CModuleBase
 
 				get_information(*it, student, subject, school);
 				
-				std::string filenameOut = Glib::ustring::compose("process/Диплом %1 %2 %3 (%4, %5) [%6].ods", student.name, student.middle, student.surname, school.name, school.city, subject.name).raw();
-				
+				std::string filenameOut = Glib::ustring::compose(resultPath + "Диплом %1 %2 %3 (%4, %5) [%6].ods", student.name, student.middle, student.surname, school.name, school.city, subject.name).raw();
 				std::ofstream fileOut(filenameOut.c_str());
 				Poco::Zip::Decompress archiveOut(fileIn, temp.path());
 				
@@ -116,8 +107,18 @@ class CModulePrint : public CModuleBase
 			}		
 		}
 		
-		void clear ()
+	public:
+		~CModulePrint ()
 		{
-			CModuleBase::clear();
-		}	
+		}
+		
+		std::string get_name () const
+		{
+			return "Печать дипломов по шаблону";
+		}
+		
+		std::string get_description () const
+		{
+			return "Пробный модуль";
+		}
 };
