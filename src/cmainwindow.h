@@ -22,6 +22,7 @@
 #include "ceditschooldialog.h"
 #include "ceditsubjectdialog.h"
 #include "ceditolympdialog.h"
+#include "cmoduleprinttable.h"
 #include "cmoduleprint.h"
 #include "cmodulebase.h"
 #include "mytypes.h"
@@ -131,7 +132,7 @@ class CMainWindow : public Gtk::Window
 			initSchoolsPage();
 
 			modules.push_back(new CModulePrint());
-			modules.push_back(new CModulePrint());
+			modules.push_back(new CModulePrintTable());
 			
 			show_all_children();
 		}

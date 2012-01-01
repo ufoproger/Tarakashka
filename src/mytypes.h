@@ -250,6 +250,9 @@ std::string print_date_full (int day, int month, int year)
 
 void my_replace (std::string& source, std::string from, std::string to)
 {
+	if (from.empty())
+		return;
+	
 	while (true)
 	{
 		size_t pos = source.find(from);

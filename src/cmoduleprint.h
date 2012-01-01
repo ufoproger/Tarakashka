@@ -87,7 +87,7 @@ class CModulePrint : public CModuleBase
 				replaces["##STUDENT_NAME##"] = student.name;
 				replaces["##STUDENT_MIDDLE##"] = student.middle;
 				replaces["##STUDENT_SURNAME##"] = student.surname;
-				replaces["##STUDENT_LEVEL##"] = Glib::ustring::compose("%1", student.level);
+				replaces["##STUDENT_LEVEL##"] = Glib::ustring::compose("%1", student.level).raw();
 				replaces["##SUBJECT_NAME##"] = subject.format;
 				replaces["##SUBJECT_DAY##"] = Glib::ustring::compose("%1", subject.day).raw();
 				replaces["##SUBJECT_MONTH##"] = get_month(subject.month);
