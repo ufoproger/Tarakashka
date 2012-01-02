@@ -175,9 +175,11 @@ class CMainWindow : public Gtk::Window
 			treeViewOlymps.insert_column_with_data_func(-1, "Школа", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_school));
 			treeViewOlymps.insert_column_with_data_func(-1, "Здесь", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_cell_renderer_here));
 		
-/*		
-			entrySearchStudents.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchStudents_changed));
-*/
+			for (int i = 2; i < 6; ++i)
+				treeViewOlymps.get_column(i)->set_resizable();
+		
+			entrySearchOlymps.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchOlymps_changed));
+
 
 			treeViewOlymps.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewOlymps_row_activated));
 			buttonEditOlymp.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonEditOlymp_clicked));
@@ -218,6 +220,9 @@ class CMainWindow : public Gtk::Window
 			treeViewStudents.insert_column_with_data_func(-1, "Школа", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewStudents_cell_renderer_school));
 			treeViewStudents.insert_column_with_data_func(-1, "Дата рождения", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewStudents_cell_renderer_birthday));
 			
+			for (int i = 1; i < 6; ++i)
+				treeViewStudents.get_column(i)->set_resizable();
+				
 			treeViewStudents.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewStudents_row_activated));
 			entrySearchStudents.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchStudents_changed));
 			buttonNewStudent.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonNewStudent_clicked));
@@ -256,6 +261,9 @@ class CMainWindow : public Gtk::Window
 			treeViewSchools.insert_column_with_data_func(-1, "Полное название", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_long_name));
 			treeViewSchools.insert_column_with_data_func(-1, "Формат", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_format));
 			treeViewSchools.insert_column_with_data_func(-1, "Ученики", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSchools_cell_renderer_count));
+		
+			for (int i = 1; i < 6; ++i)
+				treeViewSchools.get_column(i)->set_resizable();
 			
 			entrySearchSchools.signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::entrySearchSchools_changed));
 			treeViewSchools.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewSchools_row_activated));
@@ -288,8 +296,11 @@ class CMainWindow : public Gtk::Window
 			treeViewSubjects.insert_column("ID", tableColumns.id, 0);
 			treeViewSubjects.insert_column_with_data_func(-1, "Название", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_cell_renderer_name));
 			treeViewSubjects.insert_column_with_data_func(-1, "Дата", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_cell_renderer_date));
-			treeViewSubjects.insert_column_with_data_func(-1, "Участники", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_cell_renderer_count));
 			treeViewSubjects.insert_column_with_data_func(-1, "Формат", *Gtk::manage(new Gtk::CellRendererToggle), sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_cell_renderer_format));
+			treeViewSubjects.insert_column_with_data_func(-1, "Участники", *Gtk::manage(new Gtk::CellRendererText), sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_cell_renderer_count));
+
+			for (int i = 1; i < 5; ++i)
+				treeViewSubjects.get_column(i)->set_resizable();
 
 			treeViewSubjects.signal_row_activated().connect(sigc::mem_fun(*this, &CMainWindow::treeViewSubjects_row_activated));
 			buttonNewSubject.signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::buttonNewSubject_clicked));
@@ -313,18 +324,12 @@ class CMainWindow : public Gtk::Window
 				std::vector < int >::iterator it = find(selectedOlympsID.begin(), selectedOlympsID.end(), id);
 				
 				if (it == selectedOlympsID.end())
-				{
 					selectedOlympsID.push_back(id);
-				}
 				else
-				{
 					selectedOlympsID.erase(it);
-				}
 				
 				update_olympsID();
-				
 				return;
-				
 			}
 			
 			if (column->get_title() == "Здесь")
@@ -335,7 +340,6 @@ class CMainWindow : public Gtk::Window
 				*dbSession << "UPDATE olymps SET here = :here WHERE id = :id", use((bool)(here == 0)), use(id), now;
 				
 				update_olympsID();
-				
 				return;
 			}
 			
@@ -428,10 +432,9 @@ class CMainWindow : public Gtk::Window
 		std::vector < CSchoolData > get_schools_array ()
 		{
 			std::vector < Poco::Tuple < int , std::string , std::string , std::string , std::string > > schools;
+			std::vector < CSchoolData > result;
 			
 			*dbSession << "SELECT id, name, long_name, format, city FROM schools WHERE deleted = 0", into(schools), now;
-			
-			std::vector < CSchoolData > result;
 			
 			for (std::vector < Poco::Tuple < int , std::string , std::string , std::string , std::string > >::const_iterator it = schools.begin(); it != schools.end(); ++it)
 				result.push_back(CSchoolData(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>(), it->get<4>()));
@@ -442,10 +445,9 @@ class CMainWindow : public Gtk::Window
 		std::vector < COlympData > get_olymps_array ()
 		{
 			std::vector < Poco::Tuple < int , int , int , int > > olymps;
+			std::vector < COlympData > result;
 			
 			*dbSession << "SELECT id, subject_id, student_id, here FROM olymps WHERE deleted = 0", into(olymps), now;
-			
-			std::vector < COlympData > result;
 			
 			for (std::vector < Poco::Tuple < int , int , int , int > >::const_iterator it = olymps.begin(); it != olymps.end(); ++it)
 				result.push_back(COlympData(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>()));
@@ -456,10 +458,9 @@ class CMainWindow : public Gtk::Window
 		std::vector < CStudentData > get_students_array ()
 		{
 			std::vector < Poco::Tuple < int , std::string , std::string , std::string , int , int , int , int , int > > students;
+			std::vector < CStudentData > result;
 			
 			*dbSession << "SELECT id, name, middle, surname, level, school_id, birthday, birthmonth, birthyear FROM students WHERE deleted = 0", into(students), now;
-			
-			std::vector < CStudentData > result;
 			
 			for (std::vector < Poco::Tuple < int , std::string , std::string , std::string , int , int , int , int , int > >::const_iterator it = students.begin(); it != students.end(); ++it)
 				result.push_back(CStudentData(it->get<0>(), it->get<1>(), it->get<2>(), it->get<3>(), it->get<4>(), it->get<5>(), it->get<6>(), it->get<7>(), it->get<8>()));
@@ -669,6 +670,11 @@ class CMainWindow : public Gtk::Window
 			update_studentsID();
 		}
 
+		void entrySearchOlymps_changed()
+		{
+			update_olympsID();
+		}
+
 		void entrySearchSchools_changed()
 		{
 			update_schoolsID();
@@ -850,17 +856,17 @@ class CMainWindow : public Gtk::Window
 			
 			std::string searchText = "%" + entrySearchOlymps.get_text().raw() + "%";
 
-			*dbSession << "SELECT id FROM olymps WHERE deleted = 0", into(olympsID), now;
-	
-	//		*dbSession << "SELECT olymps.id FROM olymps INNER JOIN schools, students, subjects ON olymps.school_id = " \
+			*dbSession << "SELECT olymps.id FROM olymps INNER JOIN schools, students, subjects " \
+				"ON olymps.student_id = students.id AND olymps.subject_id = subjects.id AND schools.id = students.school_id " \
 				"WHERE (UPPER(students.name) LIKE UPPER(:text) " \
 				"OR UPPER(students.middle) LIKE UPPER(:text) " \
 				"OR UPPER(students.surname) LIKE UPPER(:text) " \
 				"OR UPPER(students.level) LIKE UPPER(:text) " \
 				"OR UPPER(schools.name) LIKE UPPER(:text) " \
 				"OR UPPER(schools.city) LIKE UPPER(:text) " \
-				"OR UPPER(schools.long_name) LIKE UPPER(:text)) " \
-				"AND students.deleted = 0 AND schools.deleted = 0", use(searchText), into(studentsID), now;
+				"OR UPPER(schools.long_name) LIKE UPPER(:text) "
+				"OR UPPER(subjects.name) LIKE UPPER(:text)) " \
+				"AND olymps.deleted = 0", use(searchText), into(olympsID), now;
 
 			for (std::vector < int >::const_iterator it = olympsID.begin(); it != olympsID.end(); ++it)
 			{
@@ -869,7 +875,9 @@ class CMainWindow : public Gtk::Window
 				row[tableColumns.id] = *it;
 			}
 			
-			buttonUnselectOlymps.set_label(Glib::ustring::compose("Снять отметки (%1)", selectedOlympsID.size()));	
+			buttonUnselectOlymps.set_label(Glib::ustring::compose("Снять отметки (%1)", selectedOlympsID.size()));
+			buttonUnselectOlymps.set_sensitive(!selectedOlympsID.empty());
+			buttonDoSelectedOlymps.set_sensitive(!selectedOlympsID.empty());
 		}
 		
 		void update_studentsID ()
@@ -1039,15 +1047,15 @@ class CMainWindow : public Gtk::Window
 		
 		void treeViewSubjects_cell_renderer_count (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
-/*			int id = (*it)[tableColumns.id];
+			int id = (*it)[tableColumns.id];
 			int count1, count2;
 			
-			*dbSession << "SELECT COUNT(*) FROM students WHERE school_id = :id AND deleted = 0", into(count1), use(id), now;
+			*dbSession << "SELECT COUNT(*) FROM olymps WHERE subject_id = :id AND deleted = 0", into(count1), use(id), now;
 			
-			*dbSession << "SELECT COUNT(*) FROM students WHERE school_id = :id AND deleted = 1", into(count2), use(id), now;
+			*dbSession << "SELECT COUNT(*) FROM olymps WHERE subject_id = :id AND deleted = 1", into(count2), use(id), now;
 			
 			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 / %2", count1, count2));	
-*/		}		
+		}		
 
 		void treeViewSubjects_cell_renderer_name (Gtk::CellRenderer* cr, const Gtk::TreeModel::iterator& it)
 		{
@@ -1137,4 +1145,3 @@ class CMainWindow : public Gtk::Window
 			cr->set_property<Glib::ustring>("text", Glib::ustring::compose("%1 (%2)", name, city));	
 		}
 };
-

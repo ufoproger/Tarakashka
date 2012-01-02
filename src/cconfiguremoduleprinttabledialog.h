@@ -7,15 +7,13 @@
 #include <map>
 
 #include <gtkmm/filechooserdialog.h>
+#include <gtkmm/scrolledwindow.h>
+#include <gtkmm/menuitem.h>
+#include <gtkmm/treeview.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/label.h>
-#include <gtkmm/grid.h>
-#include <gtkmm/box.h>
-#include <gtkmm/scrolledwindow.h>
-#include <gtkmm/treeview.h>
 #include <gtkmm/menu.h>
-#include <gtkmm/menuitem.h>
-#include <gtkmm/menushell.h>
+#include <gtkmm/box.h>
 
 #include "mytypes.h"
 
@@ -23,23 +21,20 @@ class CConfigureModulePrintTableDialog : public Gtk::Dialog
 {
 	private:
 		Gtk::ScrolledWindow scrolledWindow;
+		Gtk::TreeView	treeView;
+		Gtk::MenuItem 	menuItemAdd;
+		Gtk::MenuItem 	menuItemDelete;
 		Gtk::Button		buttonFilename;
 		Gtk::Label		labelFilename;
 		Gtk::HBox		boxFilename;
-		Gtk::VBox 		box;
-		Gtk::Grid		grid;
-		Gtk::TreeView	treeView;
 		Gtk::Menu		menu;		
-		Gtk::MenuItem 	menuItemAdd;
-		Gtk::MenuItem 	menuItemDelete;
+		Gtk::VBox 		box;
 	
 		Glib::RefPtr < Gtk::ListStore > refListStore;
 		
 		CModelColumnsForProperty tableColumns;
 		
 		std::map < std::string , std::string > extraReplaces;
-		std::vector < Gtk::Entry* > Entries;
-		std::vector < Gtk::Label* > labels;
 		
 		std::string filename;
 
@@ -133,7 +128,6 @@ class CConfigureModulePrintTableDialog : public Gtk::Dialog
 		
 			treeView.set_model(refListStore);
 			treeView.property_enable_grid_lines().set_value(true);					
-			
 			treeView.append_column_editable("Свойство", tableColumns.label);
 			treeView.append_column_editable("Значение", tableColumns.text);
 			

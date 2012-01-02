@@ -1,10 +1,9 @@
 #pragma once
 
+#include <gtkmm/radiobutton.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/label.h>
-#include <gtkmm/entry.h>
 #include <gtkmm/box.h>
-#include <gtkmm/radiobutton.h>
 
 #include <vector>
 
@@ -14,11 +13,11 @@
 class CSelectModuleDialog : public Gtk::Dialog
 {
 	private:
+		Gtk::RadioButtonGroup group;
 		Gtk::Label		labelTitle;
 		Gtk::VBox 		box;
-		Gtk::RadioButtonGroup group;
 
-		std::vector < Gtk::RadioButton* > radioButtons;				
+		std::vector < Gtk::RadioButton* > radioButtons;		
 		std::vector < CModuleBase* > modules;
 		
 	public:

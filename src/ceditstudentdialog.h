@@ -75,7 +75,6 @@ class CEditStudentDialog : public Gtk::Dialog
 			comboDay.pack_start(comboColumns.text);
 			comboMonth.pack_start(comboColumns.text);
 			comboYear.pack_start(comboColumns.text);
-			comboSchool.pack_start(comboColumns.id);
 			comboSchool.pack_start(comboColumns.text);
 			comboLevel.pack_start(comboColumns.text);
 
@@ -158,7 +157,7 @@ class CEditStudentDialog : public Gtk::Dialog
 				Gtk::TreeModel::Row row = *(refListStoreSchools->append());
 				
 				row[comboColumns.id] = it->get<0>();
-				row[comboColumns.text] = Glib::ustring::compose("%1, (%2)", it->get<1>(), it->get<2>());
+				row[comboColumns.text] = Glib::ustring::compose("%1 (%2)", it->get<1>(), it->get<2>());
 			}
 		}
 		

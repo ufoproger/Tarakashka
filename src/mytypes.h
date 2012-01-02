@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <iomanip>
+#include <string>
 
 #include <glibmm.h>
 

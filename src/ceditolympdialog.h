@@ -11,6 +11,8 @@
 
 #include "Poco/Data/Common.h"
 
+#include <algorithm>
+
 #include "ceditschooldialog.h"
 #include "ceditstudentdialog.h"
 #include "ceditsubjectdialog.h"
@@ -41,6 +43,62 @@ class CEditOlympDialog : public Gtk::Dialog
 		std::vector < CStudentData > students;
 		std::vector < CSubjectData > subjects;
 		std::vector < CSchoolData > schools;
+
+	private:
+		static bool compare_students (const CStudentData &a, const CStudentData &b)
+		{
+			std::string strA = Glib::ustring::compose("%3 %1 %2 (%4 класс)", a.name, a.middle, a.surname, a.level);
+			std::string strB = Glib::ustring::compose("%3 %1 %2 (%4 класс)", b.name, b.middle, b.surname, b.level);
+			
+			return (strA < strB);
+		}
+		
+		static bool compare_subjects (const CSubjectData &a, const CSubjectData &b)
+		{
+			if (a.year == b.year)
+			{
+				if (a.month == b.month)
+				{
+					if (a.day == b.day)
+					{
+						return (a.name < b.name);
+					}
+					else
+						return (a.day < b.day);
+				}
+				else
+					return (a.month < b.month);
+			}
+			else
+				return (a.year < b.year);
+		}
+		
+		void comboStudent_changed ()
+		{
+			int student = (*comboStudent.get_active())[comboColumns.id];
+			int school = -1;
+			
+			for (std::vector < CStudentData >::const_iterator it = students.begin(); it != students.end(); ++it)
+				if (it->id == student)
+				{
+					school = it->schoolID;
+					break;
+				}
+				
+			for (std::vector < CSchoolData >::const_iterator it = schools.begin(); it != schools.end(); ++it)
+				if (it->id == school)
+				{
+					labelSchool.set_text(Glib::ustring::compose("%1 (%2)", it->name, it->city));
+					break;
+				}
+		}
+		
+		void on_response (int responseID)
+		{
+			data.student = (*comboStudent.get_active())[comboColumns.id];
+			data.subject = (*comboSubject.get_active())[comboColumns.id];
+			data.here = (int)checkButtonHere.get_active();
+		}
 
 	public:
 		CEditOlympDialog ():
@@ -90,35 +148,6 @@ class CEditOlympDialog : public Gtk::Dialog
 		~CEditOlympDialog ()
 		{
 		}
-
-		void comboStudent_changed ()
-		{
-			int student = (*comboStudent.get_active())[comboColumns.id];
-			int school = -1;
-			
-			for (std::vector < CStudentData >::const_iterator it = students.begin(); it != students.end(); ++it)
-				if (it->id == student)
-				{
-					school = it->schoolID;
-				
-					break;
-				}
-				
-			for (std::vector < CSchoolData >::const_iterator it = schools.begin(); it != schools.end(); ++it)
-				if (it->id == school)
-				{
-					labelSchool.set_text(Glib::ustring::compose("%1 (%2)", it->name, it->city));
-					
-					break;
-				}
-		}
-		
-		void on_response (int responseID)
-		{
-			data.student = (*comboStudent.get_active())[comboColumns.id];
-			data.subject = (*comboSubject.get_active())[comboColumns.id];
-			data.here = (int)checkButtonHere.get_active();
-		}
 		
 		void set_data (COlympData _data)
 		{
@@ -130,7 +159,6 @@ class CEditOlympDialog : public Gtk::Dialog
 				if (students[i].id == data.student)
 				{
 					comboStudent.set_active(i);
-					
 					break;
 				}
 				
@@ -138,7 +166,6 @@ class CEditOlympDialog : public Gtk::Dialog
 				if (subjects[i].id == data.subject)
 				{
 					comboSubject.set_active(i);
-					
 					break;
 				}
 				
@@ -150,12 +177,14 @@ class CEditOlympDialog : public Gtk::Dialog
 			subjects = _subjects;
 			refListStoreSubjects->clear();
 			
+			std::sort(subjects.begin(), subjects.end(), compare_subjects);
+
 			for (std::vector < CSubjectData >::const_iterator it = subjects.begin(); it != subjects.end(); ++it)
 			{
 				Gtk::TreeModel::Row row = *(refListStoreSubjects->append());
 				
 				row[comboColumns.id] = it->id;
-				row[comboColumns.text] = Glib::ustring::compose("%1 (%2.%3.%4)", it->name, it->day, it->month, it->year);
+				row[comboColumns.text] = Glib::ustring::compose("%1 (%2)", it->name, print_date_short(it->day, it->month, it->year));
 			}			
 		}
 
@@ -163,6 +192,8 @@ class CEditOlympDialog : public Gtk::Dialog
 		{
 			students = _students;
 			refListStoreStudents->clear();
+			
+			std::sort(students.begin(), students.end(), compare_students);
 			
 			for (std::vector < CStudentData >::const_iterator it = students.begin(); it != students.end(); ++it)
 			{
