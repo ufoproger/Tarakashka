@@ -42,7 +42,7 @@ class CEditSubjectDialog : public Gtk::Dialog
 		CEditSubjectDialog ():
 			labelName("Предмет: "),
 			labelFormat("Формат: "),
-			labelDate("Дата проведения: ")
+			labelDate("Дата награждения: ")
 		{
 			set_title("Редактирование данных предмета");
 			

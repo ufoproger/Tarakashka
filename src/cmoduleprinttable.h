@@ -82,6 +82,9 @@ class CModulePrintTable : public CModuleBase
 				replaces["##SCHOOL_LONG_NAME##"] = school.longName;
 				replaces["##SCHOOL_FORMAT##"] = school.format;
 				replaces["##SCHOOL_CITY##"] = school.city;
+				replaces["##SUBJECT_NAME##"] = subject.name;
+				replaces["##SUBJECT_FORMAT##"] = subject.format;
+				replaces["##SUBJECT_DATE##"] = print_date_short(subject.day, subject.month, subject.year);
 				
 				std::string current_row = row;
 				
